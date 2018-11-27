@@ -17,8 +17,9 @@
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  padding: 10vh 10vw;
   font-family: "Montserrat", sans-serif;
-  font-size: 1vw;
+  font-size: 0.8vw;
   color: #f2f2f2;
 }
 
@@ -38,12 +39,26 @@
   font-size: 3em;
 }
 
-a,
-a:visited {
+button {
+  background-color: transparent;
+  font-size: 100%;
   color: #f2f2f2;
   text-decoration: none;
 }
 
-a:hover {
+button:hover {
   box-shadow: 0 1px currentColor;
+  cursor: pointer;
+}
+
+.git-flag a {
+  position: fixed;
+  top: 2em;
+  right: 2em;
+  display: block;
+  width: 30px;
+}
+
+.git-flag a svg {
+  fill: #fff;
 }

@@ -19,8 +19,9 @@ $colors: #8ca795, #d8b993, #bd6857, #be8f85, #f2f2f2;
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  padding: 10vh 10vw;
   font-family: "Montserrat", sans-serif;
-  font-size: 1vw;
+  font-size: 0.8vw;
   color: nth($colors, 5);
 }
 
@@ -38,11 +39,26 @@ $colors: #8ca795, #d8b993, #bd6857, #be8f85, #f2f2f2;
   }
 }
 
-a,
-a:visited {
+button {
+  background-color: transparent;
+  font-size: 100%;
   color: nth($colors, 5);
   text-decoration: none;
 }
-a:hover {
+button:hover {
   box-shadow: 0 1px currentColor;
+  cursor: pointer;
+}
+
+.git-flag {
+  a {
+    position: fixed;
+    top: 2em;
+    right: 2em;
+    display: block;
+    width: 30px;
+    svg {
+      fill: #fff;
+    }
+  }
 }
