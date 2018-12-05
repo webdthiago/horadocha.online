@@ -24,28 +24,22 @@ const diaDaSemana = moment().weekday(),
     "#402d1e"
   ],
   _randomColor = () => colors[Math.floor(Math.random() * colors.length)];
-
+  
+  //URL da api que controla o horario do chá
+  const _url = "https://teatime.azurewebsites.net/api/teatime";
+  
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       bgColor: _randomColor(),
-      cha: this._horaDoCha(moment())
+      cha: null
     };
   }
-  _horaDoCha(cha) {
-    const toCalc =
-      parseInt(cha.format("DM"), 10) /
-      (Math.PI * parseInt(cha.format("M"), 10));
 
-    cha.add(toCalc, "minutes");
-
-    if (cha.hour() < 15) {
-      cha.set("hour", 15);
-    }
-
-    return cha;
+  componentDidMount() {
+    this.pegarHoraDoCha();
   }
 
   handleChangeColor(e) {
@@ -53,16 +47,20 @@ class App extends Component {
     this.setState({ bgColor: _randomColor() });
   }
 
+  handleReset(e) {
+    this.zerarHoraDoCha();
+  }
+
   render() {
-    const { bgColor, cha } = this.state,
+    var { bgColor, cha } = this.state,
       frase =
-        cha.hour() > 18
+        cha && cha.hour() > 18
           ? "Ihhh rapaz, está meio tarde para o chá :("
           : `Para ${nomeDoDia[diaDaSemana]}, o horário do chá é às
-    ${cha.format("HH:mm")}`;
+    ${cha ? cha.format("HH:mm") : ''}`;
     return (
       <div className="root" style={{ backgroundColor: bgColor }}>
-        <div class="git-flag">
+        <div className="git-flag">
           <a
             href="https://github.com/webdthiago/horadocha.online"
             title="GitHub"
@@ -80,11 +78,98 @@ class App extends Component {
             <button onClick={this.handleChangeColor.bind(this)}>
               não gostou da cor do chá?
             </button>
+            {/* <button onClick={this.handleReset.bind(this)}>
+              Reset
+            </button> */}
           </p>
         </div>
       </div>
     );
   }
+
+  pegarHoraDoCha() {
+    //GET - Pega o horario do cha
+    //Obs: Se o response.date for null é porque o horario do cha ainda não está setado para hoje. Nesse caso é necessário chamnar o POST para setar a data do cha
+    let component = this;
+    this.request(_url, 'GET', null, function(response) {
+      if(response.date)
+      {
+        console.log("Hora do cha vinda da api", response.date);
+        component.setState({ cha: moment(response.date) });
+      }
+      else
+      {
+        console.log("Hora do cha ainda não setada", response.date);
+        component.setarHoraDoCha();
+      }
+    });
+  }
+
+  setarHoraDoCha() {
+    //POST - Seta a data para o cha de hoje
+    //Obs: Passar um objeto Date do javascript, como no exemplo abaixo que pega a data e hora atual
+    let component = this;
+    let cha = moment();
+    const toCalc =
+    parseInt(cha.format("DM"), 10) /
+      (Math.PI * parseInt(cha.format("M"), 10));
+
+    cha.add(toCalc, "minutes");
+
+    if (cha.hour() < 15) {
+      cha.set("hour", 15);
+    }
+  
+    console.log("Setando hora do cha", cha);
+    this.request(_url, 'POST', cha, function(response) {
+      component.pegarHoraDoCha();
+    });
+  }
+
+  zerarHoraDoCha() {
+    //DELETE - Zera o horario do cha de hoje. Função que em teoria não será usada mas eu fiz para dar mais controle pra quem usa a api
+    let component = this;
+    this.request(_url, 'DELETE', null, function(response) {
+      component.pegarHoraDoCha();
+    });
+  }
+
+  //Função que executa o request para a api.
+  //Fiz com javascript puro pra não depender de Jquery e etc.
+  request(url, method, data, callback) {
+    var ajax = new XMLHttpRequest();
+
+    // Seta tipo de requisição: Post e a URL da API
+    ajax.open(method, url, true);
+    ajax.setRequestHeader("Content-Type", "application/json");
+
+    if(data)
+      ajax.send(JSON.stringify(data));
+    else
+      ajax.send();
+
+    ajax.onreadystatechange = function(response) {
+      if (ajax.readyState == 4 ) {
+        let response = {
+          success: false,
+          date: null
+        };
+        
+        if(ajax.status == 200 || ajax.status == 204)
+          response.success = true;
+        
+        let date = null;
+        if(ajax.responseText)
+          date = JSON.parse(ajax.responseText);
+        
+        if(date)
+          response.date = new Date(date);
+        
+        callback(response);
+      }
+    }
+  }
+  
 }
 
 export default App;
