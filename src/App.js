@@ -1,175 +1,59 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import moment from "moment";
-import Typing from "react-typing-animation";
-import "./App.css";
+import "./App.scss";
 
-const diaDaSemana = moment().weekday(),
-  nomeDoDia = [
-    "este domingo",
-    "esta segunda-feira",
-    "esta terça-feira",
-    "esta quarta-feira",
-    "esta quinta-feira",
-    "esta sexta-feira",
-    "este sábado"
-  ],
-  colors = [
-    "#8ca795",
-    "#d8b993",
-    "#bd6857",
-    "#be8f85",
-    "#bd4a55",
-    "#5e8b65",
-    "#be7f3c",
-    "#402d1e"
-  ],
-  _randomColor = () => colors[Math.floor(Math.random() * colors.length)];
-  
-  //URL da api que controla o horario do chá
-  const _url = "https://teatime.azurewebsites.net/api/teatime";
-  
-class App extends Component {
-  constructor(props) {
-    super(props);
+const App = () => {
+  const definitions = { day: 6, hour: 5, minute: 0 },
+    [weekday, setWeekday] = useState(false),
+    [part1, setPart1] = useState(""),
+    [part2, setPart2] = useState("para faltar zero."),
+    [left, setLeft] = useState(""),
+    [sec, setSec] = useState(0);
 
-    this.state = {
-      bgColor: _randomColor(),
-      cha: null
-    };
-  }
+  useEffect(() => {
+    const _weekday = moment().weekday() === definitions.day,
+      _part1 = _weekday
+        ? `Hoje tem a hora do chá.`
+        : `Que pena, hoje não tem chá.`;
 
-  componentDidMount() {
-    this.pegarHoraDoCha();
-  }
+    setWeekday(_weekday);
+    setPart1(_part1);
 
-  handleChangeColor(e) {
-    e.preventDefault();
-    this.setState({ bgColor: _randomColor() });
-  }
-
-  handleReset(e) {
-    this.zerarHoraDoCha();
-  }
-
-  render() {
-    var { bgColor, cha } = this.state,
-      frase =
-        cha && cha.hour() > 18
-          ? "Ihhh rapaz, está meio tarde para o chá :("
-          : `Para ${nomeDoDia[diaDaSemana]}, o horário do chá é às
-    ${cha ? cha.format("HH:mm") : ''}`;
-    return (
-      <div className="root" style={{ backgroundColor: bgColor }}>
-        <div className="git-flag">
-          <a
-            href="https://github.com/webdthiago/horadocha.online"
-            title="GitHub"
-          >
-            <svg viewBox="0 0 512 512">
-              <path d="M256 70.7c-102.6 0-185.9 83.2-185.9 185.9 0 82.1 53.3 151.8 127.1 176.4 9.3 1.7 12.3-4 12.3-8.9V389.4c-51.7 11.3-62.5-21.9-62.5-21.9 -8.4-21.5-20.6-27.2-20.6-27.2 -16.9-11.5 1.3-11.3 1.3-11.3 18.7 1.3 28.5 19.2 28.5 19.2 16.6 28.4 43.5 20.2 54.1 15.4 1.7-12 6.5-20.2 11.8-24.9 -41.3-4.7-84.7-20.6-84.7-91.9 0-20.3 7.3-36.9 19.2-49.9 -1.9-4.7-8.3-23.6 1.8-49.2 0 0 15.6-5 51.1 19.1 14.8-4.1 30.7-6.2 46.5-6.3 15.8 0.1 31.7 2.1 46.6 6.3 35.5-24 51.1-19.1 51.1-19.1 10.1 25.6 3.8 44.5 1.8 49.2 11.9 13 19.1 29.6 19.1 49.9 0 71.4-43.5 87.1-84.9 91.7 6.7 5.8 12.8 17.1 12.8 34.4 0 24.9 0 44.9 0 51 0 4.9 3 10.7 12.4 8.9 73.8-24.6 127-94.3 127-176.4C441.9 153.9 358.6 70.7 256 70.7z" />
-            </svg>
-          </a>
-        </div>
-        <div className="App">
-          <Typing hideCursor={true} speed={50}>
-            <h1>{frase}</h1>
-          </Typing>
-          <p>
-            <button onClick={this.handleChangeColor.bind(this)}>
-              não gostou da cor do chá?
-            </button>
-            {/* <button onClick={this.handleReset.bind(this)}>
-              Reset
-            </button> */}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  pegarHoraDoCha() {
-    //GET - Pega o horario do cha
-    //Obs: Se o response.date for null é porque o horario do cha ainda não está setado para hoje. Nesse caso é necessário chamnar o POST para setar a data do cha
-    let component = this;
-    this.request(_url, 'GET', null, function(response) {
-      if(response.date)
-      {
-        console.log("Hora do cha vinda da api", response.date);
-        component.setState({ cha: moment(response.date) });
-      }
-      else
-      {
-        console.log("Hora do cha ainda não setada", response.date);
-        component.setarHoraDoCha();
-      }
-    });
-  }
-
-  setarHoraDoCha() {
-    //POST - Seta a data para o cha de hoje
-    //Obs: Passar um objeto Date do javascript, como no exemplo abaixo que pega a data e hora atual
-    let component = this;
-    let cha = moment();
-    const toCalc =
-    parseInt(cha.format("DM"), 10) /
-      (Math.PI * parseInt(cha.format("M"), 10));
-
-    cha.add(toCalc, "minutes");
-
-    if (cha.hour() < 15) {
-      cha.set("hour", 15);
-    }
-  
-    console.log("Setando hora do cha", cha);
-    this.request(_url, 'POST', cha, function(response) {
-      component.pegarHoraDoCha();
-    });
-  }
-
-  zerarHoraDoCha() {
-    //DELETE - Zera o horario do cha de hoje. Função que em teoria não será usada mas eu fiz para dar mais controle pra quem usa a api
-    let component = this;
-    this.request(_url, 'DELETE', null, function(response) {
-      component.pegarHoraDoCha();
-    });
-  }
-
-  //Função que executa o request para a api.
-  //Fiz com javascript puro pra não depender de Jquery e etc.
-  request(url, method, data, callback) {
-    var ajax = new XMLHttpRequest();
-
-    // Seta tipo de requisição: Post e a URL da API
-    ajax.open(method, url, true);
-    ajax.setRequestHeader("Content-Type", "application/json");
-
-    if(data)
-      ajax.send(JSON.stringify(data));
-    else
-      ajax.send();
-
-    ajax.onreadystatechange = function(response) {
-      if (ajax.readyState == 4 ) {
-        let response = {
-          success: false,
-          date: null
-        };
-        
-        if(ajax.status == 200 || ajax.status == 204)
-          response.success = true;
-        
-        let date = null;
-        if(ajax.responseText)
-          date = JSON.parse(ajax.responseText);
-        
-        if(date)
-          response.date = new Date(date);
-        
-        callback(response);
+    if (_weekday) {
+      const timeTea = moment()
+          .hour(definitions.hour)
+          .minute(definitions.minute)
+          .second("00"),
+        _left = timeTea.diff(moment(), "minutes");
+      if (_left >= 0) {
+        setLeft(_left);
+        setInterval(() => {
+          const _sec = (moment().format("ss") - 60) * -1;
+          setSec(_sec === 60 ? 0 : _sec);
+        }, 1000);
+      } else if (_left <= -30) {
+        setWeekday(false);
+        setPart1(
+          `Eeeeeeeita, você perdeu a hora do chá? Pede desculpa lá no Slack vai.`
+        );
+      } else {
+        setLeft("zero");
+        setPart2(`para atrasar ${_left * -1}`);
       }
     }
-  }
-  
-}
+  }, [weekday, part1, part2, left, sec, definitions]);
+
+  return (
+    <p>
+      {part1}{" "}
+      {weekday && (
+        <React.Fragment>
+          <br />
+          Falta {left} {parseInt(left, 10) >= 0 && <span>{sec}</span>} {part2}
+        </React.Fragment>
+      )}
+    </p>
+  );
+};
 
 export default App;
