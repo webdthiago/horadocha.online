@@ -3,7 +3,7 @@ import moment from "moment";
 import "./App.scss";
 
 const App = () => {
-  const definitions = { day: 6, hour: 5, minute: 0 },
+  const definitions = { day: 2, hour: 16, minute: 30 },
     [weekday, setWeekday] = useState(false),
     [part1, setPart1] = useState(""),
     [part2, setPart2] = useState("para faltar zero."),
